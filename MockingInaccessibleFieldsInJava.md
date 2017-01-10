@@ -11,14 +11,14 @@ Here's the scenario:
 
 ```
 public class SomeComponent {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SomeComponent.class);
-  public void doThingWhichThrowsAnException() {
-    try {
-      client.attemptServiceCall();
-    } catch (SomeBusinessException ex) {
-      LOGGER.warn("I cannot complete this operation", ex);
-    }
-  }
+	private static final Logger LOGGER = LoggerFactory.getLogger(SomeComponent.class);
+	public void doThingWhichThrowsAnException() {
+		try {
+			client.attemptServiceCall();
+		} catch (SomeBusinessException ex) {
+			LOGGER.warn("I cannot complete this operation", ex);
+		}
+	}
 }
 ```
 
@@ -31,19 +31,19 @@ Let's use reflection to manipulate the field, and we'll replace the value of `LO
 ```
 @Test
 public void ensureLoggerCallIsMade() throws Exception {
-  Field field = SomeComponent.class.getDeclaredField("LOGGER");
-  field.setAccessible(true);
-  Field modifiersField = Field.class.getDeclaredField("modifiers");
-  modifiersField.setAccessible(true);
-  modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-  Logger mockLogger = mock(Logger.class);
-  field.set(null, mockLogger);
+	Field field = SomeComponent.class.getDeclaredField("LOGGER");
+	field.setAccessible(true);
+	Field modifiersField = Field.class.getDeclaredField("modifiers");
+	modifiersField.setAccessible(true);
+	modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+	Logger mockLogger = mock(Logger.class);
+	field.set(null, mockLogger);
   
-  clientShouldThrowExceptionOnAttempt(); // this method is left as an exercise to the reader
+	clientShouldThrowExceptionOnAttempt(); // this method is left as an exercise to the reader
   
-  fixture.doThingWhichThrowsAnException();
+	fixture.doThingWhichThrowsAnException();
   
-  verify(mockLogger).warn(eq("I cannot complete this operation"), isA(SomeBusinessException.class)); 
+	verify(mockLogger).warn(eq("I cannot complete this operation"), isA(SomeBusinessException.class)); 
 }
 ```
 
@@ -70,18 +70,18 @@ public class MockitoPrivateStaticFieldRule<TYPE> implements TestRule {
 		replacementItem = Mockito.mock(mockType);
 	}
   
-  @Override
+	@Override
 	public Statement apply(final Statement base, final Description description) {
 		return new Statement() {
 			@Override
 			public void evaluate() throws Throwable {
-        Mockito.reset(replacementItem);
+				Mockito.reset(replacementItem);
 				captureField();
-        try {
-  				base.evaluate();
-        } finally {
-  				restoreField();
-        }
+				try {
+					base.evaluate();
+				} finally {
+					restoreField();
+				}
 			}
 		};
 	}
@@ -93,16 +93,16 @@ public class MockitoPrivateStaticFieldRule<TYPE> implements TestRule {
 		modifiersField.setAccessible(true);
 		modifiersField.setInt(field, field.getModifiers() & modifierMask);
 		modifiersField.setAccessible(false);
-    final Object result = field.get(null);
+		final Object result = field.get(null);
 		field.set(null, newValue);
-    field.setAccessible(false);
+		field.setAccessible(false);
 		return result;
 	}
 
 	private void captureField() throws Exception {
 		originalItem = updateField(classToModify, fieldName, ~Modifier.FINAL, replacementItem);
 	}
-
+	
 	private void restoreField() throws Exception {
 		updateField(classToModify, fieldName, Modifier.FINAL, originalItem);
 	}
@@ -120,13 +120,13 @@ public MockitoPrivateStaticFieldRule<Logger> loggerRule = new MockitoPrivateStat
 
 @Test
 public void ensureLoggerCallIsMade() throws Exception {
-  Logger mockLogger = loggerRule.getMockObject();
-  
-  clientShouldThrowExceptionOnAttempt(); // this method is left as an exercise to the reader
-  
-  fixture.doThingWhichThrowsAnException();
-  
-  verify(mockLogger).warn(eq("I cannot complete this operation"), isA(SomeBusinessException.class)); 
+	Logger mockLogger = loggerRule.getMockObject();
+	
+	clientShouldThrowExceptionOnAttempt(); // this method is still left as an exercise to the reader
+	
+	fixture.doThingWhichThrowsAnException();
+	
+	verify(mockLogger).warn(eq("I cannot complete this operation"), isA(SomeBusinessException.class)); 
 }
 ```
 
